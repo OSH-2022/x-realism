@@ -1,4 +1,5 @@
 # 💻x-YAOG_unamed
+
 Yet Another OS Group's project repository. Now it is unamed.
 
 ## 👨‍👨‍👦‍👦成员 Members
@@ -12,11 +13,11 @@ Yet Another OS Group's project repository. Now it is unamed.
 
 |    Date    |      Title      |           Result           |   Notes    |
 | :--------: | :-------------: | :------------------------: | :--------: |
-| 2022.3.13🌃 | 选题 - 集体调研 | 2022.3.13 初步调研选题.pdf | 老师已回复 |
+| 2022.3.13🌃 | 选题 - 集体调研 | [2022.3.13 初步调研选题.pdf](reports/2022.3.13\ 初步调研选题.pdf) | 老师已回复 |
 |            |                 |                            |            |
 |            |                 |                            |            |
 
 ## 📕参考 References
 
-1. “全国大学生操作系统比赛2022"相关信息，https://github.com/oscomp，[2022.3.13]
+1. “全国大学生操作系统比赛2022"相关信息，[https://github.com/oscomp](https://github.com/oscomp)，[2022.3.13]
 
