@@ -13,8 +13,8 @@
 
 |    Date    |      Title      |                            Result                            |   Notes    |
 | :--------: | :-------------: | :----------------------------------------------------------: | :--------: |
-| 2022.3.13🌃 | 选题 - 集体调研 | [preliminary research](reports/2022.3.13 preliminary research.pdf) | 老师已回复 |
-| 2022.3.20🌃 | 定题 - 集体讨论 | [research](reports/2022.3.20 research.md) and [plan](reports/2022.3.20 plan.md) |            |
+| 2022.3.13🌃 | 选题 - 集体调研 | [preliminary research](./reports/2022.3.13 preliminary research.pdf) | 老师已回复 |
+| 2022.3.20🌃 | 定题 - 集体讨论 | [research](./reports/2022.3.20 research.md) and [plan](./reports/2022.3.20 plan.md) |            |
 |            |                 |                                                              |            |
 
 ## 📕参考 References
