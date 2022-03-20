@@ -1,15 +1,15 @@
-# 💻x-YAOG_unamed
+# 💻 x-realism
 
-Yet Another OS Group's project repository. Now it is unamed.
+Yet Another OS Group's project repository.
 
-## 👨‍👨‍👦‍👦成员 Members
+## 👨‍👨‍👦‍👦 成员 Members
 
 - 黄瑞轩（PB20111686）
 - 刘良宇（PB20000180）
 - 许坤钊（PB20111714）
 - 叶升宇（PB20111701）
 
-## 📈项目进展 Process Managment
+## 📈 项目进展 Process Managment
 
 |    Date    |      Title      |           Result           |   Notes    |
 | :--------: | :-------------: | :------------------------: | :--------: |
