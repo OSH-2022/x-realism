@@ -15,10 +15,11 @@
 
 ## 📈 项目进展 Process Managment
 
-|    Date    |      Title      |                            Result                            |   Notes    |
-| :--------: | :-------------: | :----------------------------------------------------------: | :--------: |
-| 2022.3.13🌃 | 选题 - 集体调研 | [preliminary research](./reports/2022.3.13&#32;preliminary&#32;research.pdf) | 老师已回复 |
-| 2022.3.20🌃 | 定题 - 集体讨论 | [research](./reports/2022.3.20&#32;research.md) and [plan](./reports/2022.3.20&#32;plan.md) |            |
+|    Date    |      Title       |                            Result                            |   Notes    |
+| :--------: | :--------------: | :----------------------------------------------------------: | :--------: |
+| 2022.3.13🌃 | 选题 - 集体调研  | [preliminary research](./reports/2022.3.13&#32;preliminary&#32;research.pdf) | 老师已回复 |
+| 2022.3.20🌃 | 定题 - 集体讨论  | [research](./reports/2022.3.20&#32;research.md) and [plan](./reports/2022.3.20&#32;plan.md) | 老师已回复 |
+| 2022.3.27🌃 | 调研报告任务安排 |     [discussion](./reports/2022.3.27&#32;discussion.md)      |            |
 
 ## 🗺️ 文件夹说明 Folder Description
 
