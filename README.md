@@ -11,7 +11,7 @@
 
 ## ➿ 项目简介 Project Introduction
 
-本项目为用 Rust 语言从零开始写操作系统内核。
+本项目为使用 Rust 编程语言组织一个高性能、高并发和注重安全的操作系统内核（及拓展部件）。
 
 ## 📈 项目进展 Process Managment
 
@@ -25,7 +25,7 @@
 
 ## 🗺️ 文件夹说明 Folder Description
 
-- `reports`: 各类调研报告 
+- `reports`: 各类调研报告
 
 ## 📕 参考 References
 
