@@ -20,8 +20,9 @@
 | 2022.3.13🌃 |   选题 - 集体调研   | [preliminary research](./reports/2022.3.13&#32;preliminary&#32;research.pdf) |  老师已回复  |
 | 2022.3.20🌃 |   定题 - 集体讨论   | [research](./reports/2022.3.20&#32;research.md) and [plan](./reports/2022.3.20&#32;plan.md) |  老师已回复  |
 | 2022.3.27🌃 |  调研报告任务安排   |     [discussion](./reports/2022.3.27&#32;discussion.md)      |              |
-| 2022.4.3🌃  |    完成调研报告     |             [research](./reports/research-v0.md)             |              |
+| 2022.4.3🌃  |   完成调研报告v0    |           [research_v0](./reports/research-v0.md)            |              |
 | 2022.4.4🌃  | 调研报告 - 开会讨论 |     [meeting summary](./reports/2022.4.4&#32;meeting.md)     | 老师参会指导 |
+| 2022.4.9🌃  |   完成调研报告v1    |           [research_v1](./reports/research-v1.md)            |              |
 
 ## 🗺️ 文件夹说明 Folder Description
 
