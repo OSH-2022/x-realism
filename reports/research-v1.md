@@ -6,7 +6,20 @@
 
 ## 项目概述
 
-TBD（ysy）
+内核是操作系统的核心。它是硬件和计算机进程之间的**主要接口**。内核将这两者连接起来，以便尽可能有效地调度资源。本项目旨在基于现有的轮子，吸纳多个平台的有点，实现一个“我们自己”的操作系统内核。
+
+我们的操作系统内核设想有以下特性：
+
+- 微内核
+- x86 架构
+- MMU 进行轻量级隔离
+- 多任务并发的支持
+- **高性能**
+- 安全（漏洞少）
+
+在上述特性中，高性能是我们的一大关注点，因为从当前的微内核架构来看，性能问题（主要涉及进程间通信，上下文切换的高开销）一直备受关注，我们期望就此部分进行优化，提高效率。此外，针对 MMU 的安全问题，我们期望进行合理的设计，设计上追求简单但相对灵活，尽量减少漏洞，保证良好的隔离。
+
+我们建构思路是从对应用由简到繁的支持角度出发，满足应用的阶段性需求。根据特性(需求)逐步添加或增强操作系统功能，最终形成一个相对完善的操作系统内核。我们期望通过此项目来加强对操作系统相关理论概念的理解，同时掌握操作系统设计的能力。
 
 ## 项目背景
 
@@ -43,13 +56,13 @@ TBD（ysy）
 
 #### 优缺点
 
-**优点 -** 
+**优点** 
 
 - 拥有宏内核的主要优点之一是它通过系统调用提供 CPU 调度、内存管理、文件管理和其他操作系统功能。
 - 另一个是它是一个完全在单个地址空间中运行的单个大型进程。
 - 它是一个单一的静态二进制文件。一些基于单片内核的操作系统的示例包括 Unix、Linux、Open VMS、XTS-400、z/TPF。
 
-**缺点 -** 
+**缺点** 
 
 - 宏内核的主要缺点之一是，如果任何服务出现故障，都会导致整个系统出现故障。
 - 如果用户必须添加任何新服务。用户需要修改整个操作系统。
@@ -389,7 +402,21 @@ Rust 有内容详尽的**文档**以及开放、友好、高效的**开源社区
 
 ## 立项依据
 
-TBD（批判性分析，我们能做出的改变）
+如前所述，当前已经有不少优秀的微内核和 MMU 设计值得我们学习，如划分地址空间进行映射来安全地管理内核内存，针对短消息用 IPC 通信，针对长消息通过共享缓冲区进行“通知”同步， 通过细粒度的划分或分页式的方法来提高内存的利用率等。
+
+但是值得关注的是，微内核的 IPC 普遍存在效率低下问题，这是制约其性能提升的关键问题；MMU 方面，无论是插槽式内存管理、分段式内存管理还是分页式内存管理都有各自的问题，或是浪费内存资源，或是造成“外碎片”，或是作业大小受限，没有一个相对完善的设计。
+
+我们计划对微内核的 IPC 做出改进，一个思路是改进 seL4 的快速路径思想，快速路径是内核的附加前端，它可以快速执行一些常见操作的简单案例，这样能加速 IPC 的一些步骤执行，从而达到高 IPC 性能。启用或禁用快速路径不会对内核行为产生任何影响，但对性能可以起到优化。
+
+同时我们试图提出一个新的 MMU 设计，其中一些关键特性如下
+
+- 实现轻量级隔离
+- 拥有字节级权限
+- 内存使用率高
+- 基于可以快速遍历的数据结构
+- 快速快照/恢复
+- 处理完整地址空间的能力
+- 能够在字节级别跟踪未初始化的内存
 
 ## 前瞻性/重要性分析
 
@@ -606,7 +633,7 @@ THU 的操作系统项目，基于上面说的 BlogOS，相对更贴近大作业
 
 一个有意思的点在于我们可以直接通过 ssh 进入 Kerla，无需部署就可以看看别人做出来的内核是什么样的。
 
-![kerla-screenshot](X:\学习\2022春\课程-操作系统原理与设计H\x-realism\reports\images\kerla-screenshot.png)
+![kerla-screenshot](.\images\kerla-screenshot.png)
 
 文档不够详细，可参考性**较高**。
 
@@ -662,12 +689,12 @@ THU 的操作系统项目，基于上面说的 BlogOS，相对更贴近大作业
 
 [Extreme High Performance Computing or Why Microkernels Suck](https://www.kernel.org/doc/ols/2007/ols2007v1-pages-251-262.pdf) 
 
-https://en.wikipedia.org/wiki/Mach_(kernel)
+[Mach Wikipedia](https://en.wikipedia.org/wiki/Mach_(kernel))
 
-https://en.wikipedia.org/wiki/Minix
+[Minix Wikipedia](https://en.wikipedia.org/wiki/Minix) 
 
-https://zhuanlan.zhihu.com/p/216408256
+[RT-Thread Smart 微内核操作系统](https://zhuanlan.zhihu.com/p/216408256)
 
-https://os.inf.tu-dresden.de/papers_ps/aigner_phd.pdf
+[Communication in Microkernel-Based Operating Systems](https://os.inf.tu-dresden.de/papers_ps/aigner_phd.pdf)
 
-https://en.wikipedia.org/wiki/Fuchsia_(operating_system)#Kernel
+[Fuchsia 操作系统](https://en.wikipedia.org/wiki/Fuchsia_(operating_system)#Kernel)
