@@ -28,6 +28,10 @@
 
 - `reports`: 各类调研报告
 
+## ⚖ 许可证 License
+
+`x-realism` 项目采用 `MIT` 协议开源，详细信息请参考 `LICENCE` 许可证。
+
 ## 📕 参考 References
 
 1. [“全国大学生操作系统比赛2022"相关信息](https://github.com/oscomp)，[2022.3.13]
