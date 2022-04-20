@@ -24,6 +24,7 @@
 | 2022.4.04🌃 | 调研报告 - 开会讨论 |     [meeting summary](./reports/2022.4.4&#32;meeting.md)     | 老师参会指导 |
 | 2022.4.09🌃 |   完成调研报告v1    |           [research_v1](./reports/research-v1.md)            |              |
 | 2022.4.16🌇 |   讨论可行性报告    |                                                              |              |
+| 2022.4.19🌃 |  完成可行性报告v0   |        [feasibility_v0](./reports/feasibility-v0.md)         |              |
 
 ## 🗺️ 文件夹说明 Folder Description
 
