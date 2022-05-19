@@ -41,7 +41,29 @@
 
 ## 🔧 构建方式 Build
 
-Docs TBD。 ~~也可以 `cargo run` 看报错。~~
+Rust 需要安装 nightly 版：
+
+```bash
+$ rustup default nightly
+```
+
+安装需要的依赖：
+
+```bash
+$ cargo install bootimage
+```
+
+安装 qemu，参考该[文档](https://www.qemu.org/download/)即可。
+
+之后：
+
+```bash
+$ git clone git@github.com:OSH-2022/x-realism.git
+$ cd srcs
+$ cargo run
+```
+
+即可完成本项目构建
 
 ## ⚖ 许可证 License
 
