@@ -2,7 +2,7 @@
 name = "realism"
 version = "0.1.0"
 authors = ["Philipp Oppermann <dev@phil-opp.com>", "YAOG"]
-edition = "2022"
+edition = "2021"
 
 [[test]]
 name = "should_panic"
