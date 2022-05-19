@@ -1,1 +1,4 @@
 /**/.DS_Store
+/src/target
+/src/**/*.rs.bk
+/src/.vscode
