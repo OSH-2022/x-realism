@@ -1,0 +1,1 @@
+{"buildTargets":["build_docker","docker","fmt"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}
