@@ -65,6 +65,12 @@ pub fn read(fd: usize, buf: &mut [u8]) -> isize {
 pub fn write(fd: usize, buf: &[u8]) -> isize {
     sys_write(fd, buf)
 }
+pub fn send(pid: usize, message: usize, size: usize) -> isize {
+    sys_send(pid, message, size)
+}
+pub fn recv(pid: usize, buffer: usize, size: usize) -> isize {
+    sys_recv(pid, buffer, size)
+}
 pub fn exit(exit_code: i32) -> ! {
     sys_exit(exit_code);
 }
@@ -111,4 +117,8 @@ pub fn sleep(period_ms: usize) {
     while sys_get_time() < start + period_ms as isize {
         sys_yield();
     }
+}
+
+pub fn get_pid(from_pid: usize, to_pid: usize) -> usize {
+    (from_pid << 32) | to_pid
 }

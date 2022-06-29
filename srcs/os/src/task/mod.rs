@@ -24,6 +24,7 @@ mod switch;
 mod task;
 
 use crate::{
+    console::print,
     fs::{open_file, OpenFlags},
     mm::{translated_byte_buffer, translated_refmut, translated_str, UserBuffer},
     sync::UPSafeCell,
@@ -117,11 +118,37 @@ pub struct IpcMessage {
     size: usize,
 }
 
+impl IpcMessage {
+    /// Construct an IPC message
+    pub fn new(from_pid: usize, to_pid: usize, message: usize, size: usize) -> Self {
+        IpcMessage {
+            from_pid,
+            to_pid,
+            message,
+            size,
+        }
+    }
+
+    /// translate pid into from_pid and to_pid
+    pub fn translate_pid(pid: usize) -> [usize; 2] {
+        let from_pid = (pid & 0xffffffff00000000) >> 32;
+        let to_pid = pid & 0x00000000ffffffff;
+        [from_pid, to_pid]
+    }
+}
+
 ///A recv request
 pub struct IpcRequest {
     pid: usize,
     buffer: usize,
     size: usize,
+}
+
+impl IpcRequest {
+    /// Construct an IPC request
+    pub fn new(pid: usize, buffer: usize, size: usize) -> Self {
+        IpcRequest { pid, buffer, size }
+    }
 }
 
 lazy_static! {

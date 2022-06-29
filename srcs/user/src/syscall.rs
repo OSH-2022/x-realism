@@ -2,6 +2,8 @@ use core::arch::asm;
 
 const SYSCALL_OPEN: usize = 56;
 const SYSCALL_CLOSE: usize = 57;
+const SYSCALL_SEND: usize = 58;
+const SYSCALL_RECV: usize = 59;
 const SYSCALL_READ: usize = 63;
 const SYSCALL_WRITE: usize = 64;
 const SYSCALL_EXIT: usize = 93;
@@ -43,6 +45,14 @@ pub fn sys_read(fd: usize, buffer: &mut [u8]) -> isize {
 
 pub fn sys_write(fd: usize, buffer: &[u8]) -> isize {
     syscall(SYSCALL_WRITE, [fd, buffer.as_ptr() as usize, buffer.len()])
+}
+
+pub fn sys_send(pid: usize, message: usize, size: usize) -> isize {
+    syscall(SYSCALL_SEND, [pid, message, size])
+}
+
+pub fn sys_recv(pid: usize, buffer: usize, size: usize) -> isize {
+    syscall(SYSCALL_RECV, [pid, buffer, size])
 }
 
 pub fn sys_exit(exit_code: i32) -> ! {

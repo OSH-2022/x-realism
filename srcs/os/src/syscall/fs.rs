@@ -1,7 +1,9 @@
 //! File and filesystem-related syscalls
 use crate::fs::{open_file, OpenFlags};
 use crate::mm::{translated_byte_buffer, translated_str, UserBuffer};
-use crate::task::{current_task, current_user_token};
+use crate::task::{
+    add_message, current_task, current_user_token, receive_message, IpcMessage, IpcRequest,
+};
 
 pub fn sys_write(fd: usize, buf: *const u8, len: usize) -> isize {
     let token = current_user_token();
@@ -41,6 +43,18 @@ pub fn sys_read(fd: usize, buf: *const u8, len: usize) -> isize {
     } else {
         -1
     }
+}
+
+pub fn sys_send(pid: usize, message: usize, size: usize) -> isize {
+    let [from_pid, to_pid] = IpcMessage::translate_pid(pid);
+    let message = IpcMessage::new(from_pid, to_pid, message, size);
+    add_message(message);
+    0
+}
+
+pub fn sys_recv(pid: usize, buffer: usize, size: usize) -> isize {
+    let message = IpcRequest::new(pid, buffer, size);
+    receive_message(message)
 }
 
 pub fn sys_open(path: *const u8, flags: u32) -> isize {
