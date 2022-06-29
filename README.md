@@ -1,4 +1,4 @@
-# 💻 x-realism
+<img src="./realism.svg" style="zoom: 67%;" />
 
 *Yet Another OS Group's project repository.*
 
