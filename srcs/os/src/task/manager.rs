@@ -1,5 +1,5 @@
 //!Implementation of [`TaskManager`]
-use super::TaskControlBlock;
+use super::{PidHandle, TaskControlBlock};
 use crate::sync::UPSafeCell;
 use alloc::collections::VecDeque;
 use alloc::sync::Arc;
@@ -21,7 +21,16 @@ impl TaskManager {
     pub fn add(&mut self, task: Arc<TaskControlBlock>) {
         self.ready_queue.push_back(task);
     }
-    ///Remove the first task and return it,or `None` if `TaskManager` is empty
+    ///Find a task according to its pid and return it, or `None` if not find
+    pub fn get(&self, pid: usize) -> Option<Arc<TaskControlBlock>> {
+        for task in &self.ready_queue {
+            if task.pid.0 == pid {
+                return Some(task.clone());
+            }
+        }
+        None
+    }
+    ///Remove the first task and return it, or `None` if `TaskManager` is empty
     pub fn fetch(&mut self) -> Option<Arc<TaskControlBlock>> {
         self.ready_queue.pop_front()
     }

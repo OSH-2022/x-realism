@@ -23,8 +23,12 @@ mod switch;
 #[allow(rustdoc::private_intra_doc_links)]
 mod task;
 
-use crate::fs::{open_file, OpenFlags};
-use alloc::sync::Arc;
+use crate::{
+    fs::{open_file, OpenFlags},
+    mm::{translated_byte_buffer, translated_refmut, translated_str, UserBuffer},
+    sync::UPSafeCell,
+};
+use alloc::{sync::Arc, vec::Vec};
 pub use context::TaskContext;
 use lazy_static::*;
 pub use manager::{fetch_task, TaskManager};
@@ -37,6 +41,8 @@ pub use processor::{
     current_task, current_trap_cx, current_user_token, run_tasks, schedule, take_current_task,
     Processor,
 };
+
+use self::manager::TASK_MANAGER;
 /// Suspend the current 'Running' task and run the next task in task list.
 pub fn suspend_current_and_run_next() {
     // There must be an application running.
@@ -97,7 +103,64 @@ lazy_static! {
         TaskControlBlock::new(v.as_slice())
     });
 }
+
 ///Add init process to the manager
 pub fn add_initproc() {
     add_task(INITPROC.clone());
+}
+
+///Basic IPC message struct
+pub struct IpcMessage {
+    from_pid: usize,
+    to_pid: usize,
+    message: usize,
+    size: usize,
+}
+
+///A recv request
+pub struct IpcRequest {
+    pid: usize,
+    buffer: usize,
+    size: usize,
+}
+
+lazy_static! {
+    ///Init IPC
+    pub static ref IPC_CHANNEL: UPSafeCell<Vec<IpcMessage>> = unsafe {UPSafeCell::new(Vec::new())};
+}
+
+///Add message to the channel
+pub fn add_message(message: IpcMessage) {
+    IPC_CHANNEL.exclusive_access().push(message)
+}
+
+///Try to receive message from the channel
+pub fn receive_message(mut request: IpcRequest) -> isize {
+    let channel = IPC_CHANNEL.exclusive_access();
+    for message in channel.iter() {
+        if message.to_pid == request.pid {
+            // read from origin sender
+            if let Some(task) = TASK_MANAGER.exclusive_access().get(message.from_pid) {
+                let token = task.inner_exclusive_access().get_user_token();
+                let message_buffer = UserBuffer::new(translated_byte_buffer(
+                    token,
+                    message.message as *const u8,
+                    message.size,
+                ));
+                // write to the receiver buffer
+                let curr_token = current_user_token();
+                let write_buffer = UserBuffer::new(translated_byte_buffer(
+                    curr_token,
+                    request.buffer as *const u8,
+                    request.size,
+                ));
+                for (write_char, read_char) in write_buffer.into_iter().zip(message_buffer) {
+                    request.size -= 1;
+                    request.buffer += 1;
+                    unsafe { *write_char = *read_char };
+                }
+            }
+        }
+    }
+    0
 }
