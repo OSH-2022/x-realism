@@ -12,6 +12,10 @@
 //! A single global instance of [`PidAllocator`] called `PID_ALLOCATOR` allocates
 //! pid for user apps.
 //!
+//! A single global instance of [`Vec<IpcMessage>`] called `IPC_CHANNEL` allocated ipc message
+//!
+//! A single global instance of [`Vec<SysLock>`] call `GOLBAL_LOCK` allows lock usage
+//!
 //! Be careful when you see `__switch` ASM function in `switch.S`. Control flow around this function
 //! might not be what you expect.
 mod context;
@@ -190,4 +194,72 @@ pub fn receive_message(mut request: IpcRequest) -> isize {
         }
     }
     0
+}
+
+///Serve as a lock for user
+pub struct Lock(pub usize);
+
+impl Lock {
+    ///get inner value
+    pub fn get(&self) -> usize {
+        return self.0;
+    }
+    ///set inner value
+    pub fn set(&mut self, val: usize) {
+        self.0 = val
+    }
+}
+
+///Lock struct
+pub struct SysLock {
+    lock: Lock,
+    id: usize,
+}
+
+lazy_static! {
+    ///Init Lock
+    pub static ref GLOBAL_LOCK: UPSafeCell<Vec<SysLock>> = unsafe {UPSafeCell::new(Vec::new())};
+    ///lock count
+    pub static ref LOCK_COUNT: UPSafeCell<usize> = unsafe {UPSafeCell::new(0)};
+}
+
+///get lock count
+pub fn lock_count() -> usize {
+    LOCK_COUNT.exclusive_access().clone()
+}
+
+///return id of the lock allocated
+pub fn lock_acquire() -> usize {
+    let id = lock_count();
+    let lock = SysLock { lock: Lock(0), id };
+    GLOBAL_LOCK.exclusive_access().push(lock);
+    id
+}
+
+///return lock contained value, 0 is default
+pub fn lock_get(id: usize) -> usize {
+    let locks = GLOBAL_LOCK.exclusive_access();
+    for lock in locks.iter() {
+        if lock.id == id {
+            return lock.lock.get();
+        }
+    }
+    0
+}
+
+///set lock contained value
+pub fn lock_set(id: usize, val: usize) {
+    let mut locks = GLOBAL_LOCK.exclusive_access();
+    for lock in locks.iter_mut() {
+        if lock.id == id {
+            lock.lock.set(val);
+            break;
+        }
+    }
+}
+
+///release lock
+pub fn lock_release(id: usize) {
+    let mut locks = GLOBAL_LOCK.exclusive_access();
+    locks.retain(|x| x.id != id);
 }
