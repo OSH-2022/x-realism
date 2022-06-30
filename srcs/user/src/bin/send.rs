@@ -6,7 +6,7 @@ extern crate alloc;
 #[macro_use]
 extern crate user_lib;
 
-use alloc::string::{String, ToString};
+use alloc::string::ToString;
 use user_lib::{fork, get_pid, getpid, recv, send, sleep, wait};
 
 #[no_mangle]

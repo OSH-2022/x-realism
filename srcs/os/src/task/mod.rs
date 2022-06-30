@@ -262,14 +262,19 @@ pub fn lock_set(id: usize, val: usize) {
 }
 
 ///amo add
-pub fn lock_add(id: usize, val: isize) {
+pub fn lock_add(id: usize, val: isize) -> isize {
     let mut locks = GLOBAL_LOCK.exclusive_access();
     for lock in locks.iter_mut() {
         if lock.id == id {
-            lock.lock.set((lock.lock.get() as isize + val) as usize);
-            break;
+            let new_val = lock.lock.get() as isize + val;
+            if new_val < 0 {
+                return -1;
+            }
+            lock.lock.set(new_val as usize);
+            return new_val;
         }
     }
+    0
 }
 
 ///release lock

@@ -108,6 +108,5 @@ pub fn sys_lock_release(id: usize) -> isize {
 }
 
 pub fn sys_lock_add(id: usize, val: usize) -> isize {
-    lock_add(id, val as isize);
-    0
+    lock_add(id, val as isize)
 }

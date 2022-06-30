@@ -6,13 +6,14 @@ extern crate alloc;
 #[macro_use]
 extern crate user_lib;
 
-use user_lib::{fork, lock_acquire, lock_add, lock_get, lock_set, lock_wait, sleep, wait, yield_};
+use user_lib::{fork, lock_acquire, lock_add, lock_get, lock_signal, lock_wait, wait};
 
 #[no_mangle]
 pub fn main() -> i32 {
     println!("lock test start:");
     let signal = lock_acquire();
     let mutex = lock_acquire();
+    lock_signal(mutex);
     let pid = fork() as usize;
     if pid == 0 {
         // child process
@@ -21,8 +22,8 @@ pub fn main() -> i32 {
             let num = lock_get(signal);
             println!("child: {}", num);
             lock_add(signal, 1);
-            lock_set(mutex, 0);
-            if num > 18 {
+            lock_signal(mutex);
+            if num > 2000 {
                 break;
             }
         }
@@ -32,14 +33,12 @@ pub fn main() -> i32 {
     } else {
         // parent process
         loop {
-            while lock_get(mutex) != 0 {
-                yield_();
-            }
+            lock_wait(mutex);
             let num = lock_get(signal);
             println!("parent: {}", num);
             lock_add(signal, 1);
-            lock_set(mutex, 1);
-            if num > 18 {
+            lock_signal(mutex);
+            if num > 2000 {
                 break;
             }
         }

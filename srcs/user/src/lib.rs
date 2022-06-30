@@ -83,8 +83,8 @@ pub fn lock_set(id: usize, val: usize) {
 pub fn lock_release(id: usize) {
     sys_lock_release(id);
 }
-pub fn lock_add(id: usize, val: isize) {
-    sys_lock_add(id, val as usize);
+pub fn lock_add(id: usize, val: isize) -> isize {
+    sys_lock_add(id, val as usize)
 }
 pub fn exit(exit_code: i32) -> ! {
     sys_exit(exit_code);
@@ -139,11 +139,38 @@ pub fn get_pid(from_pid: usize, to_pid: usize) -> usize {
 }
 
 pub fn lock_wait(id: usize) {
-    while lock_get(id) != 1 {
+    while sys_lock_add(id, usize::MAX) == -1 {
         yield_();
     }
 }
 
 pub fn lock_signal(id: usize) {
     lock_add(id, 1);
+}
+
+pub struct Mutex {
+    id: usize,
+}
+
+impl Mutex {
+    pub fn new() -> Self {
+        // acquire a signal as mutex
+        let id = lock_acquire();
+        lock_add(id, 1);
+        Self { id }
+    }
+    pub fn lock(&mut self) {
+        // should wait until the process can lock
+        lock_wait(self.id)
+    }
+    pub fn unlock(&self) {
+        // just set the signal to zero is fine
+        lock_signal(self.id)
+    }
+}
+
+impl Drop for Mutex {
+    fn drop(&mut self) {
+        lock_release(self.id)
+    }
 }
