@@ -1,8 +1,8 @@
 use crate::fs::{open_file, OpenFlags};
 use crate::mm::{translated_refmut, translated_str};
 use crate::task::{
-    add_task, current_task, current_user_token, exit_current_and_run_next,
-    suspend_current_and_run_next,
+    add_task, current_task, current_user_token, exit_current_and_run_next, lock_acquire, lock_add,
+    lock_get, lock_release, lock_set, suspend_current_and_run_next,
 };
 use crate::timer::get_time_ms;
 use alloc::sync::Arc;
@@ -87,4 +87,27 @@ pub fn sys_waitpid(pid: isize, exit_code_ptr: *mut i32) -> isize {
         -2
     }
     // ---- release current PCB automatically
+}
+
+pub fn sys_lock_acquire() -> isize {
+    lock_acquire() as isize
+}
+
+pub fn sys_lock_get(id: usize) -> isize {
+    lock_get(id) as isize
+}
+
+pub fn sys_lock_set(id: usize, val: usize) -> isize {
+    lock_set(id, val);
+    0
+}
+
+pub fn sys_lock_release(id: usize) -> isize {
+    lock_release(id);
+    0
+}
+
+pub fn sys_lock_add(id: usize, val: usize) -> isize {
+    lock_add(id, val as isize);
+    0
 }

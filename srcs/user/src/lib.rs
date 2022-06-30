@@ -71,6 +71,21 @@ pub fn send(pid: usize, message: usize, size: usize) -> isize {
 pub fn recv(pid: usize, buffer: usize, size: usize) -> isize {
     sys_recv(pid, buffer, size)
 }
+pub fn lock_acquire() -> usize {
+    sys_lock_acquire() as usize
+}
+pub fn lock_get(id: usize) -> usize {
+    sys_lock_get(id) as usize
+}
+pub fn lock_set(id: usize, val: usize) {
+    sys_lock_set(id, val);
+}
+pub fn lock_release(id: usize) {
+    sys_lock_release(id);
+}
+pub fn lock_add(id: usize, val: isize) {
+    sys_lock_add(id, val as usize);
+}
 pub fn exit(exit_code: i32) -> ! {
     sys_exit(exit_code);
 }
@@ -121,4 +136,14 @@ pub fn sleep(period_ms: usize) {
 
 pub fn get_pid(from_pid: usize, to_pid: usize) -> usize {
     (from_pid << 32) | to_pid
+}
+
+pub fn lock_wait(id: usize) {
+    while lock_get(id) != 1 {
+        yield_();
+    }
+}
+
+pub fn lock_signal(id: usize) {
+    lock_add(id, 1);
 }

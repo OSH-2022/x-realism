@@ -6,6 +6,11 @@ const SYSCALL_SEND: usize = 58;
 const SYSCALL_RECV: usize = 59;
 const SYSCALL_READ: usize = 63;
 const SYSCALL_WRITE: usize = 64;
+const SYSCALL_LOCK_ACQUIRE: usize = 70;
+const SYSCALL_LOCK_GET: usize = 71;
+const SYSCALL_LOCK_SET: usize = 72;
+const SYSCALL_LOCK_RELEASE: usize = 73;
+const SYSCALL_LOCK_ADD: usize = 74;
 const SYSCALL_EXIT: usize = 93;
 const SYSCALL_YIELD: usize = 124;
 const SYSCALL_GET_TIME: usize = 169;
@@ -53,6 +58,26 @@ pub fn sys_send(pid: usize, message: usize, size: usize) -> isize {
 
 pub fn sys_recv(pid: usize, buffer: usize, size: usize) -> isize {
     syscall(SYSCALL_RECV, [pid, buffer, size])
+}
+
+pub fn sys_lock_acquire() -> isize {
+    syscall(SYSCALL_LOCK_ACQUIRE, [0, 0, 0])
+}
+
+pub fn sys_lock_get(id: usize) -> isize {
+    syscall(SYSCALL_LOCK_GET, [id, 0, 0])
+}
+
+pub fn sys_lock_set(id: usize, val: usize) -> isize {
+    syscall(SYSCALL_LOCK_SET, [id, val, 0])
+}
+
+pub fn sys_lock_release(id: usize) -> isize {
+    syscall(SYSCALL_LOCK_RELEASE, [id, 0, 0])
+}
+
+pub fn sys_lock_add(id: usize, val: usize) -> isize {
+    syscall(SYSCALL_LOCK_ADD, [id, val, 0])
 }
 
 pub fn sys_exit(exit_code: i32) -> ! {
