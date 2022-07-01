@@ -251,7 +251,7 @@ impl Runtime {
 
         // We initialize the rest of our tasks.
         let mut tasks = vec![base_task];
-        let mut available_tasks: Vec<Task> = (1..MAX_TASKS).map(|i| Task::new(i)).collect();
+        let mut available_tasks: Vec<Task> = (1..MAX_TASKS).map(Task::new).collect();
         tasks.append(&mut available_tasks);
 
         Runtime { tasks, current: 0 }
@@ -321,7 +321,7 @@ impl Runtime {
         // and not on linux. This is a common problem in tests so Rust has a `black_box` function in the `test` crate that
         // will "pretend" to use a value we give it to prevent the compiler from eliminating code. I'll just do this instead,
         // this code will never be run anyways and if it did it would always be `true`.
-        self.tasks.len() > 0
+        !self.tasks.is_empty()
     }
 
     /// While `yield` is the logically interesting function I think this the technically most interesting.
@@ -349,7 +349,7 @@ impl Runtime {
 
         let size = available.stack.len();
         unsafe {
-            let s_ptr = available.stack.as_mut_ptr().offset(size as isize);
+            let s_ptr = available.stack.as_mut_ptr().add(size);
 
             // make sure our stack itself is 8 byte aligned - it will always
             // offset to a lower memory address. Since we know we're at the "high"

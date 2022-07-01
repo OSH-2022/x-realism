@@ -17,7 +17,7 @@ pub fn main() -> i32 {
     if pid == 0 {
         // child process
         println!("hello child process!");
-        let mut buffer = [0 as u8; 17];
+        let mut buffer = [0_u8; 17];
         let ptr = buffer.as_mut_ptr() as usize;
         let pid = getpid() as usize;
 

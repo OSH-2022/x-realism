@@ -6,7 +6,7 @@ extern crate alloc;
 #[macro_use]
 extern crate user_lib;
 
-use user_lib::{fork, lock_acquire, lock_add, lock_get, lock_set, lock_wait, sleep, wait, yield_};
+use user_lib::{fork, lock_acquire, lock_add, lock_get, wait};
 
 #[no_mangle]
 pub fn main() -> i32 {
