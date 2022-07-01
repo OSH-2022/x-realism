@@ -1,0 +1,31 @@
+[package]
+name = "initfs"
+version = "0.1.0"
+authors = ["4lDO2 <4lDO2@protonmail.com>"]
+edition = "2018"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+plain = "0.2"
+
+[features]
+default = ["std"]
+
+std = []
+
+# Enables functionality to actually read the filesystem, which is only done in
+# the kernel. (Writing to the filesystem is done in utils, and that crate only
+# needs the type definitions).
+kernel = []
+
+[dev-dependencies]
+log = "0.4"
+env_logger = "0.8"
+anyhow = "1"
+
+[workspace]
+members = [
+  "tools",
+]
