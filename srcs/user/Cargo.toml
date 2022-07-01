@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 buddy_system_allocator = "0.6"
 bitflags = "1.2.1"
+easy-fs = { path = "../easy-fs" }
 
 [profile.release]
 debug = true
