@@ -12,6 +12,10 @@ const CR: u8 = 0x0du8;
 const DL: u8 = 0x7fu8;
 const BS: u8 = 0x08u8;
 
+const COLOR_GREEN: &str = "\x1B[38;5;10m";
+const COLOR_YELLOW: &str = "\x1B[38;5;11m";
+const CLEAR_COLOR: &str = "\x1B[0m";
+
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use user_lib::console::getchar;
@@ -89,7 +93,7 @@ fn cat(path: &str) -> i32 {
 pub fn main() -> i32 {
     println!("Rust user shell");
     let mut line: String = String::new();
-    print!(">> ");
+    print!("{}x-realism{}> ", COLOR_GREEN, CLEAR_COLOR);
     loop {
         let c = getchar();
         match c {
@@ -115,11 +119,14 @@ pub fn main() -> i32 {
                         let mut exit_code: i32 = 0;
                         let exit_pid = waitpid(pid as usize, &mut exit_code);
                         assert_eq!(pid, exit_pid);
-                        println!("Shell: Process {} exited with code {}", pid, exit_code);
+                        println!(
+                            "{}Shell: Process {} exited with code {}{}",
+                            COLOR_YELLOW, pid, exit_code, CLEAR_COLOR
+                        );
                     }
                     line.clear();
                 }
-                print!(">> ");
+                print!("{}x-realism{}> ", COLOR_GREEN, CLEAR_COLOR);
             }
             BS | DL => {
                 if !line.is_empty() {
