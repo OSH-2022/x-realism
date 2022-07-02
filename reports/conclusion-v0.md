@@ -266,17 +266,104 @@ macro_rules! println {
 
 （Rust 从语言设计的角度考量并不支持函数重载）
 
-### 4.2 rCore 框架的修改与整合
+### 4.2 rCore 框架的整合
 
-to be done
+本项目基础框架为 rCore ch5。拥有了基于页表的内存管理，简易的进程机制以及一个操作系统内核的最小框架。
+
+首先整个 OS 的抽象自顶向下为，应用程序通过函数调用来实现一些复杂的功能；用户库提供这些函数调用，其内部又是通过系统调用向操作系统发出请求，而操作系统同样有 syscall，在本项目中由 RUSTSBI 提供的服务完成；更底层的则是由硬件实现，不赘述。
+
+其次简要介绍内存布局。
+
+
+
+![../_images/kernel-as-low.png](https://rcore-os.github.io/rCore-Tutorial-Book-v3/_images/kernel-as-low.png)
+
+对于内核态而言，内核地址空间被恒等映射至物理地址空间，使得能够方便地访问内核的各个段。
+
+关于动态内存分配，Rust语言在 `alloc` crate 中设定了一套简洁规范的接口，只要实现了这套接口，内核就可以很方便地支持动态内存分配。
+
+```rust
+use crate::config::KERNEL_HEAP_SIZE;
+use buddy_system_allocator::LockedHeap;
+
+#[global_allocator]
+/// heap allocator instance
+static HEAP_ALLOCATOR: LockedHeap = LockedHeap::empty();
+
+pub fn init_heap() {
+    unsafe {
+        HEAP_ALLOCATOR
+            .lock()
+            .init(HEAP_SPACE.as_ptr() as usize, KERNEL_HEAP_SIZE);
+    }
+}
+```
+
+实现了这样一套接口后，后续我们就可以方便地使用 Vec、String 等容器。
+
+![../_images/app-as-full.png](https://rcore-os.github.io/rCore-Tutorial-Book-v3/_images/app-as-full.png)
+
+对于用户态，不同段通过设置不同的访问权限实现了隔离。通过在最高的虚拟页面设置跳板，其中跳板是一段只读的代码，不同的应用程序的跳板页面均映射到相同的物理内存，通过跳板程序实现内核态和用户态的上下文切换。
+
+真实的 CPU 在内存映射机制中除了 MMU，往往还需要 TLB 以加速地址转换。为确保 MMU 的地址转换能够及时与 satp 寄存器的修改同步，需要立即使用 `sfence.vma` 指令将 TLB 清空，这样 MMU 就不会看到 TLB 中已经过期的键值对了。
+
+关于进程，重点关注 TCB
+
+```rust
+pub struct TaskControlBlock {
+    // immutable
+    pub pid: PidHandle,
+    pub kernel_stack: KernelStack,
+    // mutable
+    inner: UPSafeCell<TaskControlBlockInner>,
+}
+
+pub struct TaskControlBlockInner {
+    pub trap_cx_ppn: PhysPageNum,
+    pub base_size: usize,
+    pub task_cx: TaskContext,
+    pub task_status: TaskStatus,
+    pub memory_set: MemorySet,
+    pub parent: Option<Weak<TaskControlBlock>>,
+    pub children: Vec<Arc<TaskControlBlock>>,
+    pub exit_code: i32,
+}
+```
+
+TCB 主要分两部分，一部分为不可变的元数据：进程标识符 `PidHandle` 和内核栈 `KernelStack`；另一部分为在运行过程中可能发生变化的元数据。
+
+- `trap_cx_ppn`：应用地址空间中的 Trap 上下文被放在的物理页帧的物理页号。
+- `base_size`：应用数据仅有可能出现在应用地址空间低于 `base_size` 字节的区域中。借助它我们可以清楚的知道应用有多少数据驻留在内存中。
+- `task_cx`：将暂停的任务的任务上下文保存在任务控制块中。
+- `task_status`：当前进程的执行状态。
+- `memory_set`：应用地址空间。
+- `parent`：指向当前进程的父进程（如果存在的话）。
+- `children`：将当前进程的所有子进程的任务控制块以 `Arc` 智能指针的形式保存在一个向量中，这样才能够更方便的找到它们。
+- `exit_code`：退出码，当进程调用 exit 系统调用主动退出或者执行出错由内核终止的时候，它的会被内核保存在它的任务控制块中，并等待它的父进程通过 waitpid 回收它的资源的同时也收集它的 PID 以及退出码。
 
 ### 4.3 进程调度和 IPC
 
-to be done
+#### 4.3.1 进程调度
+
+在本操作系统中，我们采取的进程调度方式是**时间片轮转**（RR）。在 rCore 的框架下，已经实现了时钟中断的机制。
+
+在 RISC-V 64 架构上，计数器 `mtime` 保存在一个 64 位的 CSR 中，它用来统计处理器自上电以来经过了多少个内置时钟的时钟周期。另外一个 64 位的 CSR `mtimecmp` 的作用是：一旦计数器 `mtime` 的值超过了 `mtimecmp`，就会触发一次时钟中断。这使得我们可以方便的通过设置 `mtimecmp` 的值来决定下一次时钟中断何时触发。
+
+运行在 M 特权级的 RustSBI 已经预留了相应的接口，rCore 框架通过调用它们来间接实现计时器的控制。这些被封装在 `timer` 模块中。
+
+这样，在触发时钟中断时，转到进程调度服务程序，由它来选择下一个要调度到核上进行的进程。
+
+#### 4.3.2 IPC
+
+IPC 在设计上参考了 sel4 的实现。具体来说通过端点（Endpoint）进行。端点可以被认为是一个邮箱，发送者和接收者通过该邮箱通过握手交换消息。任何拥有 Send 能力的人都可以通过 Endpoint 发送消息，任何拥有 Receive 上限的人都可以接收消息。这意味着每个端点可以有任意数量的发送者和接收者。特别是，无论有多少线程尝试从 Endpoint 接收，特定消息仅传递给一个接收者（队列中的第一个接收者）。
+
+在调用时，send-only 操作不返回成功指示，只发送 IPC 系统调用 `Send`，从而实现单向数据传输。send-ony 不能用于接收任何信息。结果状态，指示消息是否已被传递，将构成反向通道：接收者可以使用结果状态向发送者发送信息。这将导致允许未经能力明确授权的信息流，不符合设计。(可以将这一点看作是特性)
+
+除“端点对象”外，还有“通知对象”，这一点的设计与绝大多数的操作系统设计类似，在逻辑上是一个二进制信号量的小数组。它具有相同的操作：“信号”(`Signal`)和“等待”(`Wait`)。所谓二进制也就是互斥的，通过通知对象来进行互斥资源的管理。
 
 ### 4.4 信号量和互斥锁
 
-to be done
+为了保障进程交替执行过程中对共享数据的正确度写，我们也实现了锁机制。
 
 ### 4.5 多线程
 
