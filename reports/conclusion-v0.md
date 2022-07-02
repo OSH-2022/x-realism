@@ -349,25 +349,181 @@ TCB 主要分两部分，一部分为不可变的元数据：进程标识符 `Pi
 
 在 RISC-V 64 架构上，计数器 `mtime` 保存在一个 64 位的 CSR 中，它用来统计处理器自上电以来经过了多少个内置时钟的时钟周期。另外一个 64 位的 CSR `mtimecmp` 的作用是：一旦计数器 `mtime` 的值超过了 `mtimecmp`，就会触发一次时钟中断。这使得我们可以方便的通过设置 `mtimecmp` 的值来决定下一次时钟中断何时触发。
 
-运行在 M 特权级的 RustSBI 已经预留了相应的接口，rCore 框架通过调用它们来间接实现计时器的控制。这些被封装在 `timer` 模块中。
+首先需要启用该计数器
 
-这样，在触发时钟中断时，转到进程调度服务程序，由它来选择下一个要调度到核上进行的进程。
+```rust
+set_clear_csr!(
+    /// Supervisor Timer Interrupt Enable
+    , set_stimer, clear_stimer, 1 << 5);
+```
+
+运行在 M 特权级的 RustSBI 已经预留了相应的接口，rCore 框架通过调用它们来间接实现计时器的控制。
+
+```rust
+///get current time
+pub fn get_time() -> usize {
+    time::read()
+}
+/// get current time in microseconds
+pub fn get_time_ms() -> usize {
+    time::read() / (CLOCK_FREQ / MSEC_PER_SEC)
+}
+/// set the next timer interrupt
+pub fn set_next_trigger() {
+    set_timer(get_time() + CLOCK_FREQ / TICKS_PER_SEC);
+}
+```
+
+这些被封装在 `timer` 模块中
+
+这样，在触发时钟中断时，转到进程调度服务程序，由它来设置下一个时钟中断的触发，并选择下一个要调度到核上进行的进程
+
+```rust
+pub fn suspend_current_and_run_next() {
+    // There must be an application running.
+    let task = take_current_task().unwrap();
+
+    // ---- access current TCB exclusively
+    let mut task_inner = task.inner_exclusive_access();
+    let task_cx_ptr = &mut task_inner.task_cx as *mut TaskContext;
+    // Change status to Ready
+    task_inner.task_status = TaskStatus::Ready;
+    drop(task_inner);
+    // ---- release current PCB
+
+    // push back to ready queue.
+    add_task(task);
+    // jump to scheduling cycle
+    schedule(task_cx_ptr);
+}
+```
 
 #### 4.3.2 IPC
 
-IPC 在设计上参考了 sel4 的实现。具体来说通过端点（Endpoint）进行。端点可以被认为是一个邮箱，发送者和接收者通过该邮箱通过握手交换消息。任何拥有 Send 能力的人都可以通过 Endpoint 发送消息，任何拥有 Receive 上限的人都可以接收消息。这意味着每个端点可以有任意数量的发送者和接收者。特别是，无论有多少线程尝试从 Endpoint 接收，特定消息仅传递给一个接收者（队列中的第一个接收者）。
+IPC 在设计上参考了 sel4 的实现。具体来说 sel4 通过端点（Endpoint）进行。端点可以被认为是一个邮箱，发送者和接收者通过该邮箱通过握手交换消息。任何拥有 Send 能力的人都可以通过 Endpoint 发送消息，任何拥有 Receive 上限的人都可以接收消息。这意味着每个端点可以有任意数量的发送者和接收者。特别是，无论有多少线程尝试从 Endpoint 接收，特定消息仅传递给一个接收者（队列中的第一个接收者）。
 
 在调用时，send-only 操作不返回成功指示，只发送 IPC 系统调用 `Send`，从而实现单向数据传输。send-ony 不能用于接收任何信息。结果状态，指示消息是否已被传递，将构成反向通道：接收者可以使用结果状态向发送者发送信息。这将导致允许未经能力明确授权的信息流，不符合设计。(可以将这一点看作是特性)
 
-除“端点对象”外，还有“通知对象”，这一点的设计与绝大多数的操作系统设计类似，在逻辑上是一个二进制信号量的小数组。它具有相同的操作：“信号”(`Signal`)和“等待”(`Wait`)。所谓二进制也就是互斥的，通过通知对象来进行互斥资源的管理。
+IPC Channel：
+
+```rust
+lazy_static! {
+    ///Init IPC
+    pub static ref IPC_CHANNEL: UPSafeCell<Vec<IpcMessage>> = unsafe {UPSafeCell::new(Vec::new())};
+}
+```
+
+根据 IPC Message 和 Request 给出 send 和 recv 方法，操作 Channel：
+
+```rust
+pub struct IpcMessage {
+    from_pid: usize,
+    to_pid: usize,
+    message: usize,
+    size: usize,
+}
+
+pub struct IpcRequest {
+    pid: usize,
+    buffer: usize,
+    size: usize,
+}
+```
 
 ### 4.4 信号量和互斥锁
 
-为了保障进程交替执行过程中对共享数据的正确度写，我们也实现了锁机制。
+为了保障进程交替执行过程中对共享数据的正确度写，我们也实现了锁机制
+
+由于系统调用过程中访问共享数据不会被打断，所以我们将访问共享数据封装成 syscall，类似 unix 的互斥锁
+
+对应提供 acquire 和 get, add, release 方法
+
+```rust
+///return lock contained value, 0 is default
+pub fn lock_get(id: usize) -> usize {
+    ......
+}
+
+///set lock contained value
+pub fn lock_set(id: usize, val: usize) {
+    ......
+}
+
+///amo add
+pub fn lock_add(id: usize, val: isize) -> isize {
+    ......
+}
+
+///release lock
+pub fn lock_release(id: usize) {
+    ......
+}
+```
+
+可以作为信号量使用，我们在用户库提供了封装好的 Wait 和 Signal 操作：
+
+```rust
+pub fn lock_wait(id: usize) {
+    while sys_lock_add(id, usize::MAX) == -1 {
+        yield_();
+    }
+}
+
+pub fn lock_signal(id: usize) {
+    lock_add(id, 1);
+}
+```
+
+wait 操作需要注意保证原子性
 
 ### 4.5 多线程
 
-to be done
+简单地说，线程是进程的组成部分，进程可包含1 – n个线程，属于同一个进程的线程共享进程的资源，基本的线程由线程ID、执行状态、当前指令指针(PC)、寄存器集合和栈组成。线程是可以被操作系统或用户态调度器独立调度（Scheduling）和分派（Dispatch）的基本单位。
+
+因此具有如下基本结构：
+
+```rust
+struct Task {
+    id: usize,
+    stack: Vec<u8>,
+    ctx: TaskContext,	// 当前指令指针(PC)和通用寄存器集合
+    state: State,
+}
+```
+
+可以由 `yield` 使得线程主动让出资源：
+
+```rust
+fn t_yield(&mut self) -> bool {
+    let mut pos = self.current;
+
+    // 寻找就绪
+    while self.tasks[pos].state != State::Ready {
+        pos += 1;
+        if pos == self.tasks.len() {
+            pos = 0;
+        }
+        if pos == self.current {
+            return false;
+        }
+    }
+	
+    // 如果不为空
+    if self.tasks[self.current].state != State::Available {
+        self.tasks[self.current].state = State::Ready;
+    }
+
+    self.tasks[pos].state = State::Running;
+    let old_pos = self.current;
+    self.current = pos;
+
+    unsafe {
+        switch(&mut self.tasks[old_pos].ctx, &self.tasks[pos].ctx);
+    }
+
+    !self.tasks.is_empty()
+}
+```
 
 ### 4.6 文件系统等服务
 
