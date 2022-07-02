@@ -1,4 +1,4 @@
-//! `Arc<Inode>` -> `OSInodeInner`: In order to open files concurrently
+//! `Arc<Inode>` -> `OSInodeInner`: In order to open files concurrentl&y
 //! we need to wrap `Inode` into `Arc`,but `Mutex` in `Inode` prevents
 //! file systems from being accessed simultaneously
 //!
@@ -60,7 +60,9 @@ lazy_static! {
 }
 /// List all files in the filesystems
 pub fn list_apps() {
-    for app in ROOT_INODE.ls() {
+    let list = ROOT_INODE.ls();
+    println!("total {}", list.len());
+    for app in list {
         println!("{}", app);
     }
 }
