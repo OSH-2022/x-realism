@@ -60,11 +60,9 @@ lazy_static! {
 }
 /// List all files in the filesystems
 pub fn list_apps() {
-    println!("/**** APPS ****");
     for app in ROOT_INODE.ls() {
         println!("{}", app);
     }
-    println!("**************/");
 }
 
 bitflags! {
@@ -111,6 +109,9 @@ pub fn open_file(name: &str, flags: OpenFlags) -> Option<Arc<OSInode>> {
                 .map(|inode| Arc::new(OSInode::new(readable, writable, inode)))
         }
     } else {
+        if name == "root" {
+            list_apps();
+        }
         ROOT_INODE.find(name).map(|inode| {
             if flags.contains(OpenFlags::TRUNC) {
                 inode.clear();
