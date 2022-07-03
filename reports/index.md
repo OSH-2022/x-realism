@@ -6,7 +6,7 @@ It's a course lab and we are now woking at it.
 
 ### research
 
-Here is our [research report](./research).
+Here is our [research report](./research-v1).
 
 ### fesibility
 
